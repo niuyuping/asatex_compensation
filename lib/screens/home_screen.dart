@@ -1,4 +1,7 @@
+import 'package:asatex_compensation/screens/gross_salary_calculator_screen.dart';
 import 'package:asatex_compensation/screens/salary_calculator_screen.dart';
+import 'package:asatex_compensation/screens/settings_screen.dart';
+import 'package:asatex_compensation/screens/tanka_calculator_screen.dart';
 import 'package:flutter/material.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -13,9 +16,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   static const List<Widget> _widgetOptions = <Widget>[
     SalaryCalculatorScreen(title: '給与計算'),
-    Text('Index 1: Business'),
-    Text('Index 2: School'),
-    Text('Index 3: Settings'),
+    GrossSalaryCalculatorScreen(title: '基本給逆算'),
+    TankaCalculatorScreen(title: '単価逆算'),
+    SettingsScreen(title: '設定'),
   ];
 
   void _onItemTapped(int index) {
@@ -38,19 +41,19 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.business),
-            label: 'Business',
+            label: '基本給逆算',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.school),
-            label: 'School',
+            label: '単価逆算',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: '設定',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: Theme.of(context).primaryColor,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed, // This is important for 4+ items
       ),

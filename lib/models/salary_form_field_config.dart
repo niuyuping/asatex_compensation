@@ -3,14 +3,15 @@ import 'package:json_annotation/json_annotation.dart';
 part 'salary_form_field_config.g.dart';
 
 abstract class FormFieldConfig {
-  String get fieldName;
+  final int? id;
+  final String fieldName;
+
+  FormFieldConfig({this.id, required this.fieldName});
 }
 
 @JsonSerializable()
-class TextFieldConfig implements FormFieldConfig {
+class TextFieldConfig extends FormFieldConfig {
   final String label;
-  @override
-  final String fieldName;
   final String initialValue;
   @JsonKey(defaultValue: false)
   final bool isNumber;
@@ -18,43 +19,46 @@ class TextFieldConfig implements FormFieldConfig {
   final bool readonly;
 
   TextFieldConfig({
+    super.id,
+    required super.fieldName,
     required this.label,
-    required this.fieldName,
     required this.initialValue,
     this.isNumber = false,
     this.readonly = false,
   });
 
-  factory TextFieldConfig.fromJson(Map<String, dynamic> json) =>
-      _$TextFieldConfigFromJson(json);
+  factory TextFieldConfig.fromJson(Map<String, dynamic> json) => _$TextFieldConfigFromJson(json);
 
   Map<String, dynamic> toJson() => _$TextFieldConfigToJson(this);
 }
 
 @JsonSerializable()
-class DropdownConfig implements FormFieldConfig {
+class DropdownConfig extends FormFieldConfig {
   final String label;
-  @override
-  final String fieldName;
+  final String initialValue;
+  DropdownConfig({
+    super.id,
+    required super.fieldName,
+    required this.label,
+    this.initialValue = "",
+  });
 
-  DropdownConfig({required this.label, required this.fieldName});
-
-  factory DropdownConfig.fromJson(Map<String, dynamic> json) =>
-      _$DropdownConfigFromJson(json);
+  factory DropdownConfig.fromJson(Map<String, dynamic> json) => _$DropdownConfigFromJson(json);
 
   Map<String, dynamic> toJson() => _$DropdownConfigToJson(this);
 }
 
 @JsonSerializable()
-class ButtonConfig implements FormFieldConfig {
+class ButtonConfig extends FormFieldConfig {
   final String label;
-  @override
-  final String fieldName;
 
-  ButtonConfig({required this.label, required this.fieldName});
+  ButtonConfig({
+    super.id,
+    required super.fieldName,
+    required this.label,
+  });
 
-  factory ButtonConfig.fromJson(Map<String, dynamic> json) =>
-      _$ButtonConfigFromJson(json);
+  factory ButtonConfig.fromJson(Map<String, dynamic> json) => _$ButtonConfigFromJson(json);
 
   Map<String, dynamic> toJson() => _$ButtonConfigToJson(this);
 }
@@ -74,26 +78,23 @@ class RadioOptionConfig {
 }
 
 @JsonSerializable()
-class RadioGroupConfig implements FormFieldConfig {
+class RadioGroupConfig extends FormFieldConfig {
   final String label;
-  @override
-  final String fieldName;
   final String initialValue;
   final List<RadioOptionConfig> options;
 
   RadioGroupConfig({
+    super.id,
+    required super.fieldName,
     required this.label, 
-    required this.fieldName, 
     required this.initialValue,
-    required this.options
+    required this.options,
   });
 
-  factory RadioGroupConfig.fromJson(Map<String, dynamic> json) =>
-      _$RadioGroupConfigFromJson(json);
+  factory RadioGroupConfig.fromJson(Map<String, dynamic> json) => _$RadioGroupConfigFromJson(json);
 
   Map<String, dynamic> toJson() => _$RadioGroupConfigToJson(this);
 }
-
 
 @JsonSerializable()
 class SalaryFormFieldConfig {

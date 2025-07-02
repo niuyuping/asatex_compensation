@@ -8,8 +8,9 @@ part of 'salary_form_field_config.dart';
 
 TextFieldConfig _$TextFieldConfigFromJson(Map<String, dynamic> json) =>
     TextFieldConfig(
-      label: json['label'] as String,
+      id: (json['id'] as num?)?.toInt(),
       fieldName: json['fieldName'] as String,
+      label: json['label'] as String,
       initialValue: json['initialValue'] as String,
       isNumber: json['isNumber'] as bool? ?? false,
       readonly: json['readonly'] as bool? ?? false,
@@ -17,8 +18,9 @@ TextFieldConfig _$TextFieldConfigFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$TextFieldConfigToJson(TextFieldConfig instance) =>
     <String, dynamic>{
-      'label': instance.label,
+      'id': instance.id,
       'fieldName': instance.fieldName,
+      'label': instance.label,
       'initialValue': instance.initialValue,
       'isNumber': instance.isNumber,
       'readonly': instance.readonly,
@@ -26,20 +28,32 @@ Map<String, dynamic> _$TextFieldConfigToJson(TextFieldConfig instance) =>
 
 DropdownConfig _$DropdownConfigFromJson(Map<String, dynamic> json) =>
     DropdownConfig(
-      label: json['label'] as String,
+      id: (json['id'] as num?)?.toInt(),
       fieldName: json['fieldName'] as String,
+      label: json['label'] as String,
+      initialValue: json['initialValue'] as String? ?? "",
     );
 
 Map<String, dynamic> _$DropdownConfigToJson(DropdownConfig instance) =>
-    <String, dynamic>{'label': instance.label, 'fieldName': instance.fieldName};
+    <String, dynamic>{
+      'id': instance.id,
+      'fieldName': instance.fieldName,
+      'label': instance.label,
+      'initialValue': instance.initialValue,
+    };
 
 ButtonConfig _$ButtonConfigFromJson(Map<String, dynamic> json) => ButtonConfig(
-  label: json['label'] as String,
+  id: (json['id'] as num?)?.toInt(),
   fieldName: json['fieldName'] as String,
+  label: json['label'] as String,
 );
 
 Map<String, dynamic> _$ButtonConfigToJson(ButtonConfig instance) =>
-    <String, dynamic>{'label': instance.label, 'fieldName': instance.fieldName};
+    <String, dynamic>{
+      'id': instance.id,
+      'fieldName': instance.fieldName,
+      'label': instance.label,
+    };
 
 RadioOptionConfig _$RadioOptionConfigFromJson(Map<String, dynamic> json) =>
     RadioOptionConfig(
@@ -57,8 +71,9 @@ Map<String, dynamic> _$RadioOptionConfigToJson(RadioOptionConfig instance) =>
 
 RadioGroupConfig _$RadioGroupConfigFromJson(Map<String, dynamic> json) =>
     RadioGroupConfig(
-      label: json['label'] as String,
+      id: (json['id'] as num?)?.toInt(),
       fieldName: json['fieldName'] as String,
+      label: json['label'] as String,
       initialValue: json['initialValue'] as String,
       options: (json['options'] as List<dynamic>)
           .map((e) => RadioOptionConfig.fromJson(e as Map<String, dynamic>))
@@ -67,8 +82,9 @@ RadioGroupConfig _$RadioGroupConfigFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$RadioGroupConfigToJson(RadioGroupConfig instance) =>
     <String, dynamic>{
-      'label': instance.label,
+      'id': instance.id,
       'fieldName': instance.fieldName,
+      'label': instance.label,
       'initialValue': instance.initialValue,
       'options': instance.options,
     };

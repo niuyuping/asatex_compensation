@@ -1,30 +1,33 @@
-import 'package:asatex_compensation/providers/counter_provider.dart';
-import 'package:asatex_compensation/router.dart';
+import 'package:asatex_compensation/screens/home_screen.dart';
+import 'package:asatex_compensation/services/config_service.dart';
+import 'package:asatex_compensation/services/settings_service.dart';
+import 'package:asatex_compensation/utils/logger.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
-void main() {
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CounterProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ja_JP', null);
+  await ConfigService.instance.loadConfig();
+  await SettingsService().initialize();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      routerConfig: goRouter,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+    return ChangeNotifierProvider.value(
+      value: SettingsService(),
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: const MyHomePage(),
       ),
     );
   }
