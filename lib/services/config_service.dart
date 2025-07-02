@@ -8,7 +8,7 @@ class ConfigService {
 
   SalaryFormFieldConfig? _config;
 
-  Future<SalaryFormFieldConfig> loadConfig() async {
+  Future<void> initialize() async {
     if (_config == null) {
       final configJson = {
         "textFields": [
@@ -62,12 +62,20 @@ class ConfigService {
       };
       _config = SalaryFormFieldConfig.fromJson(configJson);
     }
+  }
+
+  Future<SalaryFormFieldConfig> loadConfig() async {
+    // Now this method simply returns the already loaded config.
+    if (_config == null) {
+      await initialize();
+    }
     return _config!;
   }
 
   SalaryFormFieldConfig get config {
     if (_config == null) {
-      throw Exception("Config not loaded. Call loadConfig() first.");
+      // This should ideally not happen if initialized in main.dart
+      throw Exception("Config not loaded. Call initialize() in main.dart first.");
     }
     return _config!;
   }

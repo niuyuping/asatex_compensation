@@ -20,7 +20,6 @@ class GrossSalaryCalculatorScreen extends StatefulWidget {
 
 class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScreen> {
   final ConfigService _configService = ConfigService.instance;
-  Future<SalaryFormFieldConfig>? _configFuture;
   late final WebViewController _controller;
   bool _isPageLoaded = false;
   bool _isUpdatingFromWeb = false;
@@ -36,14 +35,8 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
   @override
   void initState() {
     super.initState();
-    _configFuture = _loadInitialData();
-  }
-
-  Future<SalaryFormFieldConfig> _loadInitialData() async {
-    final config = await _configService.loadConfig();
-    _initializeStateFromConfig(config);
+    _initializeStateFromConfig(_configService.config);
     _initController();
-    return config;
   }
 
   void _initializeStateFromConfig(SalaryFormFieldConfig config) {
@@ -225,20 +218,7 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: FutureBuilder<SalaryFormFieldConfig>(
-        future: _configFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting || _textControllers.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error loading config: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            return _buildSalaryCalculator(snapshot.data!);
-          } else {
-            return const Center(child: Text('No config data.'));
-          }
-        },
-      ),
+      body: _buildSalaryCalculator(_configService.config),
     );
   }
 

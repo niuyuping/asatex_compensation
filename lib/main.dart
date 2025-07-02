@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ja_JP', null);
-  await ConfigService.instance.loadConfig();
+  await ConfigService.instance.initialize();
   await SettingsService().initialize();
   runApp(const MyApp());
 }
