@@ -26,7 +26,7 @@ jobs:
         run: flutter config --enable-windows-desktop
 
       - name: Build Windows App
-        run: flutter build windows --release
+        run: flutter build windows --release --cmake-args="-DMSVC_RUNTIME_LIBRARY=MultiThreaded"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
