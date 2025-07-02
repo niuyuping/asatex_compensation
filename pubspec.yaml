@@ -97,7 +97,7 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
 
-flutter_msix:
+msix_config:
   display_name: Asatex Compensation
   publisher_display_name: Asatex
   publisher: CN=Asatex
@@ -105,3 +105,4 @@ flutter_msix:
   logo_path: macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png
   # 暂时禁用签名，以便在CI/CD中运行
   sign_msix: false
+  build_windows: false
