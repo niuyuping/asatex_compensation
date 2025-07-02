@@ -100,6 +100,7 @@ flutter:
 flutter_msix:
   display_name: Asatex Compensation
   publisher_display_name: Asatex
+  publisher: CN=Asatex
   identity_name: com.asatex.compensation
   logo_path: macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png
   # 暂时禁用签名，以便在CI/CD中运行
