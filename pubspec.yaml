@@ -56,7 +56,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   json_serializable: ^6.9.5
   build_runner: ^2.5.4
-  msix: ^3.16.9
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -96,14 +95,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-
-msix_config:
-  display_name: Asatex Compensation
-  publisher_display_name: Asatex
-  publisher: CN=Asatex
-  identity_name: com.asatex.compensation
-  logo_path: macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png
-  output_path: build/windows/msix
-  # 暂时禁用签名，以便在CI/CD中运行
-  sign_msix: false
-  build_windows: false

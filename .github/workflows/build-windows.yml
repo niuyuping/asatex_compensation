@@ -28,11 +28,14 @@ jobs:
       - name: Build Windows App
         run: flutter build windows --release
 
-      - name: Create MSIX installer
-        run: flutter pub run msix:create
+      - name: Copy required DLLs
+        run: |
+          copy C:\Windows\System32\msvcp140.dll ${{ github.workspace }}\build\windows\x64\runner\Release
+          copy C:\Windows\System32\vcruntime140.dll ${{ github.workspace }}\build\windows\x64\runner\Release
+          copy C:\Windows\System32\vcruntime140_1.dll ${{ github.workspace }}\build\windows\x64\runner\Release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-release-installer
-          path: build/windows/msix/*.msix
+          name: asatex_compensation
+          path: build/windows/x64/runner/Release
