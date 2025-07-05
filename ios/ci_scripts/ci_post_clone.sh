@@ -14,7 +14,7 @@ echo "Now in project root: $(pwd)"
 
 # 在项目根目录下，克隆 Flutter
 echo "Cloning Flutter into project root..."
-git clone https://github.com/flutter/flutter.git --depth 1
+git clone --branch stable https://github.com/flutter/flutter.git --depth 1
 
 # 将刚刚克隆的 Flutter 添加到系统路径中
 # $PWD 现在是项目的根目录
