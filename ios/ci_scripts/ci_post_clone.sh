@@ -3,18 +3,24 @@
 # 如果任何命令失败，立即退出
 set -e
 
-echo "--- [CI] Starting ci_post_clone.sh script ---"
+echo "--- [CI] Starting ci_post_clone.sh script (v4 - Final) ---"
 
-# 脚本默认在仓库根目录执行，这里我们确认一下
-echo "Workspace directory: $CI_WORKSPACE"
-cd $CI_WORKSPACE
+# 日志显示，脚本是从 ios/ci_scripts 目录运行的。
+# 我们需要返回到项目的根目录，也就是向上两级。
+echo "Current directory: $(pwd)"
+echo "Navigating to project root..."
+cd ../..
+echo "Now in project root: $(pwd)"
 
-# 安装 Flutter
-echo "Cloning Flutter from GitHub..."
+# 在项目根目录下，克隆 Flutter
+echo "Cloning Flutter into project root..."
 git clone https://github.com/flutter/flutter.git --depth 1
-export PATH="$CI_WORKSPACE/flutter/bin:$PATH"
 
-# 打印版本号和路径以供调试
+# 将刚刚克隆的 Flutter 添加到系统路径中
+# $PWD 现在是项目的根目录
+export PATH="$PWD/flutter/bin:$PATH"
+
+# 打印 Flutter 信息以供调试，确认路径设置成功
 echo "Flutter path: $(which flutter)"
 echo "Flutter version:"
 flutter --version
@@ -23,13 +29,8 @@ flutter --version
 echo "Running flutter doctor..."
 flutter doctor
 
-# 获取 Dart 和 Flutter 依赖
+# 在项目根目录运行 'flutter pub get' 来安装所有依赖
 echo "Running 'flutter pub get'..."
 flutter pub get
 
-# 为了确保万无一失，我们手动进入 ios 目录并运行 pod install
-echo "Navigating to ios directory to run pod install..."
-cd ios
-pod install
-
-echo "--- [CI] Finished ci_post_clone.sh script ---"
+echo "--- [CI] Finished ci_post_clone.sh script successfully ---"
