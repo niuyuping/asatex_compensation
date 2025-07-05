@@ -190,7 +190,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
-				635B64F72E191A6C002E5F76 /* [CI] Prepar Flutter Environment */,
 				FFE598B6BD6F021805FB2C6C /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
@@ -328,24 +327,6 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		635B64F72E191A6C002E5F76 /* [CI] Prepar Flutter Environment */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[CI] Prepar Flutter Environment";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Stop executing if any command fails\nset -e\n\n# This script runs in the /ios directory. We need to go up to the root.\ncd ..\n\necho \"--- Preparing Flutter Environment in Build Phase ---\"\n\n# Install Flutter using git\necho \"Cloning Flutter...\"\ngit clone https://github.com/flutter/flutter.git --depth 1\nexport PATH=\"$PWD/flutter/bin:$PATH\"\n\n# Run flutter pub get\necho \"Installing dependencies...\"\nflutter pub get\n\necho \"--- Flutter Environment Prepared Successfully ---\"\n";
 		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
