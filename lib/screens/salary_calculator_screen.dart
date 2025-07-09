@@ -756,7 +756,14 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
           toolbarButtons: [
             (node) {
               return GestureDetector(
-                onTap: () => node.unfocus(),
+                onTap: () {
+                  // 先同步当前字段到WebView，再收起键盘
+                  final fieldName = entry.key;
+                  if (_textControllers.containsKey(fieldName)) {
+                    _syncField(fieldName, _textControllers[fieldName]!.text);
+                  }
+                  node.unfocus();
+                },
                 child: const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text("完成"),

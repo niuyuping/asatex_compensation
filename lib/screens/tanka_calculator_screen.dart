@@ -301,17 +301,31 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
           ),
 
           // Loading indicator overlay
-          if (!_isPageLoaded)
+          if (!_isPageLoaded || _isCalculating)
             Positioned.fill(
               child: Container(
                 color: Colors.black.withAlpha(77),
-                child: const Center(child: CircularProgressIndicator()),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    if (_isCalculating)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          '最適な単価を計算中...',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _triggerWebButton('calc'),
+        onPressed: _isCalculating ? null : _findBestTanka,
+        backgroundColor: _isCalculating ? Colors.grey : null,
         child: const Icon(Icons.calculate),
       ),
     );
@@ -933,7 +947,14 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
           toolbarButtons: [
             (node) {
               return GestureDetector(
-                onTap: () => node.unfocus(),
+                onTap: () {
+                  // 先同步当前字段到WebView，再收起键盘
+                  final fieldName = entry.key;
+                  if (_textControllers.containsKey(fieldName)) {
+                    _syncField(fieldName, _textControllers[fieldName]!.text);
+                  }
+                  node.unfocus();
+                },
                 child: const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text("完成"),
