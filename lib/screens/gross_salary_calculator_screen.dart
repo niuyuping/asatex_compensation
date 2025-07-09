@@ -9,6 +9,7 @@ import 'package:asatex_compensation/services/config_service.dart';
 import 'package:asatex_compensation/models/salary_form_field_config.dart';
 import 'package:asatex_compensation/services/settings_service.dart';
 import 'package:provider/provider.dart';
+import 'package:keyboard_actions/keyboard_actions.dart';
 
 class GrossSalaryCalculatorScreen extends StatefulWidget {
   const GrossSalaryCalculatorScreen({super.key, required this.title});
@@ -31,6 +32,7 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
   final Map<String, List<Map<String, String>>> _dropdownOptions = {};
   final Map<String, String?> _selectedDropdownValues = {};
   final Map<String, String> _selectedRadioValues = {};
+  final Map<String, FocusNode> _focusNodes = {};
 
   @override
   void initState() {
@@ -56,6 +58,7 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
         }
       });
       _textControllers[field.fieldName] = controller;
+      _focusNodes[field.fieldName] = FocusNode();
     }
 
     // Initialize radio buttons
@@ -71,6 +74,7 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
       _dropdownOptions[dropdownConfig.fieldName] = [];
     }
     _textControllers['kitai_rieki'] = TextEditingController(text: '100,000');
+    _focusNodes['kitai_rieki'] = FocusNode();
   }
 
   void _initController() {
@@ -206,6 +210,9 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
     for (final controller in _textControllers.values) {
       controller.dispose();
     }
+    for (final node in _focusNodes.values) {
+      node.dispose();
+    }
     super.dispose();
   }
 
@@ -238,48 +245,54 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
           ),
 
           // This is the visible and interactive UI layer.
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // New dedicated section for readonly fields
-                  if (readonlyFields.isNotEmpty)
+          KeyboardActions(
+            config: _buildKeyboardActionsConfig(),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // New dedicated section for readonly fields
+                    if (readonlyFields.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 1.0),
+                        // Pass ALL text fields to the results widget for calculation purposes.
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildReadonlyResults()]),
+                      ),
+                    // 期待利益输入框
                     Padding(
-                      padding: const EdgeInsets.only(top: 1.0),
-                      // Pass ALL text fields to the results widget for calculation purposes.
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildReadonlyResults()]),
-                    ),
-                  // 期待利益输入框
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _textControllers['kitai_rieki'] ??= TextEditingController(),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                            decoration: const InputDecoration(
-                              labelText: '期待利益',
-                              labelStyle: TextStyle(fontSize: 14.0),
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _textControllers['kitai_rieki'] ??= TextEditingController(),
+                              focusNode: _focusNodes['kitai_rieki'],
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                              decoration: const InputDecoration(
+                                labelText: '期待利益',
+                                labelStyle: TextStyle(fontSize: 14.0),
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+                              ),
+                              textInputAction: TextInputAction.done,
+                              onEditingComplete: () => FocusScope.of(context).unfocus(),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  _buildTextFields(editableFields),
-                  Divider(thickness: 1),
-                  _buildDropdowns(config.dropdowns),
-                  Divider(thickness: 1),
-                  _buildRadioGroups(config.radios),
-                  Divider(thickness: 1),
-                  _buildButtons(config.buttons),
-                ],
+                    _buildTextFields(editableFields),
+                    Divider(thickness: 1),
+                    _buildDropdowns(config.dropdowns),
+                    Divider(thickness: 1),
+                    _buildRadioGroups(config.radios),
+                    Divider(thickness: 1),
+                    _buildButtons(config.buttons),
+                  ],
+                ),
               ),
             ),
           ),
@@ -720,6 +733,7 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
   Widget _buildTextField(TextEditingController controller, TextFieldConfig config) {
     return TextField(
       controller: controller,
+      focusNode: _focusNodes[config.fieldName],
       readOnly: config.readonly,
       keyboardType: config.isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
       inputFormatters: config.isNumber ? [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))] : [],
@@ -732,6 +746,8 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
         filled: config.readonly,
         contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
       ),
+      textInputAction: TextInputAction.done,
+      onEditingComplete: () => FocusScope.of(context).unfocus(),
     );
   }
 
@@ -814,6 +830,7 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
   Future<void> _findBestSalary() async {
     final targetProfitText = _textControllers['kitai_rieki']?.text.replaceAll(',', '');
     final targetProfit = double.tryParse(targetProfitText ?? '');
+
     if (targetProfit == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('有効な期待利益を入力してください。')));
       return;
@@ -913,5 +930,26 @@ class _GrossSalaryCalculatorScreenState extends State<GrossSalaryCalculatorScree
       setState(() => _isCalculating = false);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('計算が完了しました。')));
     }
+  }
+
+  KeyboardActionsConfig _buildKeyboardActionsConfig() {
+    return KeyboardActionsConfig(
+      actions: _focusNodes.entries.map((entry) {
+        return KeyboardActionsItem(
+          focusNode: entry.value,
+          toolbarButtons: [
+            (node) {
+              return GestureDetector(
+                onTap: () => node.unfocus(),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text("完成"),
+                ),
+              );
+            }
+          ],
+        );
+      }).toList(),
+    );
   }
 }

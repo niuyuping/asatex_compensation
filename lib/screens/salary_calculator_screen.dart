@@ -8,6 +8,7 @@ import 'package:asatex_compensation/services/config_service.dart';
 import 'package:asatex_compensation/models/salary_form_field_config.dart';
 import 'package:provider/provider.dart';
 import 'package:asatex_compensation/services/settings_service.dart';
+import 'package:keyboard_actions/keyboard_actions.dart';
 
 class SalaryCalculatorScreen extends StatefulWidget {
   const SalaryCalculatorScreen({super.key, required this.title});
@@ -29,6 +30,7 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
   final Map<String, List<Map<String, String>>> _dropdownOptions = {};
   final Map<String, String?> _selectedDropdownValues = {};
   final Map<String, String> _selectedRadioValues = {};
+  final Map<String, FocusNode> _focusNodes = {};
 
   @override
   void initState() {
@@ -54,6 +56,7 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
         }
       });
       _textControllers[field.fieldName] = controller;
+      _focusNodes[field.fieldName] = FocusNode();
     }
 
     // Initialize radio buttons
@@ -123,7 +126,6 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
 
   void _triggerWebButton(String fieldName) {
     if (!_isPageLoaded) return;
-
     // Sync UI to web, then set loading state, then click the button in web.
     _syncAllFields();
     setState(() => _isPageLoaded = false);
@@ -181,6 +183,9 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
     for (final controller in _textControllers.values) {
       controller.dispose();
     }
+    for (final node in _focusNodes.values) {
+      node.dispose();
+    }
     super.dispose();
   }
 
@@ -210,49 +215,52 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
 
     return Scaffold(
       body: Stack(
-      children: [
-        // This WebView runs in the background. It's not visible and doesn't
-        // receive pointer events, but it's active for JS communication.
-        Opacity(
-          opacity: 0.0,
-          child: IgnorePointer(child: WebViewWidget(controller: _controller)),
-        ),
+        children: [
+          // This WebView runs in the background. It's not visible and doesn't
+          // receive pointer events, but it's active for JS communication.
+          Opacity(
+            opacity: 0.0,
+            child: IgnorePointer(child: WebViewWidget(controller: _controller)),
+          ),
 
-        // This is the visible and interactive UI layer.
-        SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // New dedicated section for readonly fields
-                if (readonlyFields.isNotEmpty)
-                  Padding(
-                      padding: const EdgeInsets.only(top: 1.0),
-                      // Pass ALL text fields to the results widget for calculation purposes.
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildReadonlyResults(config.textFields)]),
-                    ),
-                _buildTextFields(editableFields),
-                Divider(thickness: 1),
-                _buildDropdowns(config.dropdowns),
-                Divider(thickness: 1),
-                _buildRadioGroups(config.radios),
-                Divider(thickness: 1),
-                _buildButtons(config.buttons),
-              ],
+          // This is the visible and interactive UI layer.
+          KeyboardActions(
+            config: _buildKeyboardActionsConfig(),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // New dedicated section for readonly fields
+                    if (readonlyFields.isNotEmpty)
+                      Padding(
+                          padding: const EdgeInsets.only(top: 1.0),
+                          // Pass ALL text fields to the results widget for calculation purposes.
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildReadonlyResults(config.textFields)]),
+                        ),
+                    _buildTextFields(editableFields),
+                    Divider(thickness: 1),
+                    _buildDropdowns(config.dropdowns),
+                    Divider(thickness: 1),
+                    _buildRadioGroups(config.radios),
+                    Divider(thickness: 1),
+                    _buildButtons(config.buttons),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
 
-        // Loading indicator overlay
-        if (!_isPageLoaded)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withAlpha(77),
-              child: const Center(child: CircularProgressIndicator()),
+          // Loading indicator overlay
+          if (!_isPageLoaded)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withAlpha(77),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
             ),
-          ),
-      ],
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _triggerWebButton('calc'),
@@ -641,6 +649,7 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
     final isSensitive = [1, 2, 15].contains(config.id); // 1: 単価, 2: 控除率
     return TextField(
       controller: controller,
+      focusNode: _focusNodes[config.fieldName],
       readOnly: config.readonly,
       obscureText: isSensitive && !_isSensitiveDataVisible,
       obscuringCharacter: '*',
@@ -655,6 +664,8 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
         filled: config.readonly,
         contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
       ),
+      textInputAction: TextInputAction.done,
+      onEditingComplete: () => FocusScope.of(context).unfocus(),
     );
   }
 
@@ -735,5 +746,26 @@ class _SalaryCalculatorScreenState extends State<SalaryCalculatorScreen> {
 
   void _showInfoDialog(BuildContext context) {
     // Implementation of _showInfoDialog method
+  }
+
+  KeyboardActionsConfig _buildKeyboardActionsConfig() {
+    return KeyboardActionsConfig(
+      actions: _focusNodes.entries.map((entry) {
+        return KeyboardActionsItem(
+          focusNode: entry.value,
+          toolbarButtons: [
+            (node) {
+              return GestureDetector(
+                onTap: () => node.unfocus(),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text("完成"),
+                ),
+              );
+            }
+          ],
+        );
+      }).toList(),
+    );
   }
 }

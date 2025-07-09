@@ -9,6 +9,7 @@ import 'package:asatex_compensation/services/config_service.dart';
 import 'package:asatex_compensation/models/salary_form_field_config.dart';
 import 'package:asatex_compensation/services/settings_service.dart';
 import 'package:provider/provider.dart';
+import 'package:keyboard_actions/keyboard_actions.dart';
 
 class TankaCalculatorScreen extends StatefulWidget {
   const TankaCalculatorScreen({super.key, required this.title});
@@ -32,6 +33,7 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
   final Map<String, List<Map<String, String>>> _dropdownOptions = {};
   final Map<String, String?> _selectedDropdownValues = {};
   final Map<String, String> _selectedRadioValues = {};
+  final Map<String, FocusNode> _focusNodes = {};
 
   @override
   void initState() {
@@ -57,6 +59,7 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
         }
       });
       _textControllers[field.fieldName] = controller;
+      _focusNodes[field.fieldName] = FocusNode();
     }
 
     // Initialize radio buttons
@@ -72,6 +75,7 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
       _dropdownOptions[dropdownConfig.fieldName] = [];
     }
     _textControllers['target_rieki'] = TextEditingController(text: '100,000');
+    _focusNodes['target_rieki'] = FocusNode();
   }
 
   void _initController() {
@@ -147,7 +151,6 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
 
   void _triggerWebButton(String fieldName) {
     if (!_isPageLoaded) return;
-
     // 将社会保险dropdown的value设置为?
     _resetSocialInsurance();
     // Sync UI to web, then set loading state, then click the button in web.
@@ -207,6 +210,9 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
     for (final controller in _textControllers.values) {
       controller.dispose();
     }
+    for (final node in _focusNodes.values) {
+      node.dispose();
+    }
     super.dispose();
   }
 
@@ -232,16 +238,6 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
           )
         ],
       ),
-      body: _buildSalaryCalculator(_configService.config),
-    );
-  }
-
-  Widget _buildSalaryCalculator(SalaryFormFieldConfig config) {
-    // Separate fields into editable and readonly lists
-    final editableFields = config.textFields.where((f) => !f.readonly).toList();
-    final readonlyFields = config.textFields.where((f) => f.readonly).toList();
-
-    return Scaffold(
       body: Stack(
         children: [
           // This WebView runs in the background. It's not visible and doesn't
@@ -252,78 +248,70 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
           ),
 
           // This is the visible and interactive UI layer.
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // New dedicated section for readonly fields
-                  if (readonlyFields.isNotEmpty)
+          KeyboardActions(
+            config: _buildKeyboardActionsConfig(),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // New dedicated section for readonly fields
+                    if (_configService.config.textFields.where((f) => f.readonly).isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 1.0),
+                        // Pass ALL text fields to the results widget for calculation purposes.
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildReadonlyResults()]),
+                      ),
+                    // 利益输入框
                     Padding(
-                      padding: const EdgeInsets.only(top: 1.0),
-                      // Pass ALL text fields to the results widget for calculation purposes.
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildReadonlyResults()]),
-                    ),
-                  // 利益输入框
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _textControllers['target_rieki'] ??= TextEditingController(),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                            decoration: const InputDecoration(
-                              labelText: '期待利益',
-                              labelStyle: TextStyle(fontSize: 14.0),
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _textControllers['target_rieki'] ??= TextEditingController(),
+                              focusNode: _focusNodes['target_rieki'],
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                              decoration: const InputDecoration(
+                                labelText: '期待利益',
+                                labelStyle: TextStyle(fontSize: 14.0),
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+                              ),
+                              textInputAction: TextInputAction.done,
+                              onEditingComplete: () => FocusScope.of(context).unfocus(),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  _buildTextFields(editableFields),
-                  Divider(thickness: 1),
-                  _buildDropdowns(config.dropdowns),
-                  Divider(thickness: 1),
-                  _buildRadioGroups(config.radios),
-                  Divider(thickness: 1),
-                  _buildButtons(config.buttons),
-                ],
+                    _buildTextFields(_configService.config.textFields.where((f) => !f.readonly).toList()),
+                    Divider(thickness: 1),
+                    _buildDropdowns(_configService.config.dropdowns),
+                    Divider(thickness: 1),
+                    _buildRadioGroups(_configService.config.radios),
+                    Divider(thickness: 1),
+                    _buildButtons(_configService.config.buttons),
+                  ],
+                ),
               ),
             ),
           ),
 
           // Loading indicator overlay
-          if (!_isPageLoaded || _isCalculating)
+          if (!_isPageLoaded)
             Positioned.fill(
               child: Container(
                 color: Colors.black.withAlpha(77),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(),
-                    if (_isCalculating)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16.0),
-                        child: Text(
-                          '最適な単価を計算中...',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ),
-                  ],
-                ),
+                child: const Center(child: CircularProgressIndicator()),
               ),
             ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _isCalculating ? null : _findBestTanka,
-        backgroundColor: _isCalculating ? Colors.grey : null,
+        onPressed: () => _triggerWebButton('calc'),
         child: const Icon(Icons.calculate),
       ),
     );
@@ -736,6 +724,7 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
   Widget _buildTextField(TextEditingController controller, TextFieldConfig config) {
     return TextField(
       controller: controller,
+      focusNode: _focusNodes[config.fieldName],
       readOnly: config.readonly,
       keyboardType: config.isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
       inputFormatters: config.isNumber ? [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))] : [],
@@ -748,6 +737,8 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
         filled: config.readonly,
         contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
       ),
+      textInputAction: TextInputAction.done,
+      onEditingComplete: () => FocusScope.of(context).unfocus(),
     );
   }
 
@@ -932,5 +923,26 @@ class _TankaCalculatorScreenState extends State<TankaCalculatorScreen> {
       setState(() => _isCalculating = false);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('計算が完了しました。')));
     }
+  }
+
+  KeyboardActionsConfig _buildKeyboardActionsConfig() {
+    return KeyboardActionsConfig(
+      actions: _focusNodes.entries.map((entry) {
+        return KeyboardActionsItem(
+          focusNode: entry.value,
+          toolbarButtons: [
+            (node) {
+              return GestureDetector(
+                onTap: () => node.unfocus(),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text("完成"),
+                ),
+              );
+            }
+          ],
+        );
+      }).toList(),
+    );
   }
 }

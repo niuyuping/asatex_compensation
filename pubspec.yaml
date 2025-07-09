@@ -43,6 +43,7 @@ dependencies:
   month_picker_dialog: ^6.2.3
   intl: ^0.20.2
   shared_preferences: ^2.5.3
+  keyboard_actions: ^4.2.0
 
 dev_dependencies:
   flutter_test:
